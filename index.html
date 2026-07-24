@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Assistant PAC – Documentation Utilisateur</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --red: #CC0000;
+    --dark: #1a1a1a;
+    --grey: #f5f5f5;
+    --white: #ffffff;
+    --border: #ddd;
+    --green: #2a7a3b;
+    --orange: #d97706;
+    --blue: #1d4ed8;
+    --purple: #8b5cf6;
+    
+    /* Couleurs spécifiques à la Tarification */
+    --calc-dhl: #e3000f;
+    --calc-metro: #2563eb;
+    --calc-locale: #4f46e5;
+    --calc-misterauto: #059669;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f0f0;
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(to right, #1a1a1a 0%, #1a1a1a 55%, #8a0000 85%, #CC0000 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .header-logo { display: flex; align-items: center; gap: 16px; }
+  .header-logo img { height: 60px; }
+  .header-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
+  .header-sub { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
+
+  .sidebar-search {
+    padding: 24px 24px 10px 24px;
+    position: relative;
+    z-index: 10;
+  }
+  .search-input-wrapper {
+    position: relative;
+  }
+  .search-input-wrapper input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: var(--dark);
+    background: #f8fafc;
+    transition: all 0.2s;
+    outline: none;
+  }
+  
+  .search-input-wrapper input:focus {
+    border-color: var(--red);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
+  }
+  .search-input-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+  #globalResults {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 24px;
+    right: 24px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    z-index: 200;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  .result-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item:hover { background: #fef2f2; }
+  .result-tab { font-size: 0.7rem; color: var(--red); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+  .result-title { font-size: 0.88rem; font-weight: 600; color: var(--dark); }
+  .result-snippet { font-size: 0.78rem; color: #666; margin-top: 2px; }
+  .result-empty { padding: 20px; text-align: center; color: #999; font-size: 0.85rem; }
+
+  .app-container {
+    display: flex;
+    align-items: flex-start;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .sidebar {
+    width: 270px;
+    flex-shrink: 0;
+    background: white;
+    border-right: 1px solid var(--border);
+    height: calc(100vh - 92px);
+    position: sticky;
+    top: 92px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.02);
+    z-index: 90;
+  }
+
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0 24px 0;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .sidebar nav button {
+    background: none;
+    border: none;
+    border-left: 4px solid transparent;
+    text-align: left;
+    padding: 14px 24px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #555;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .sidebar nav button:hover { 
+    color: var(--red); 
+    background-color: #f9f9f9;
+  }
+  .sidebar nav button.active {
+    color: var(--red);
+    border-left-color: var(--red);
+    background-color: #fff1f2;
+  }
+
+  main { 
+    flex: 1;
+    min-width: 0;
+    padding: 32px 40px; 
+  }
+  
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero {
+    background: linear-gradient(135deg, var(--dark) 60%, var(--red));
+    color: white;
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: 'C';
+    position: absolute;
+    right: -20px;
+    top: -30px;
+    font-size: 200px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.05);
+  }
+  .hero h1 { font-size: 2rem; margin-bottom: 8px; }
+  .hero p { color: #ccc; font-size: 1rem; max-width: 600px; }
+  
+  .hero-stats {
+    display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 14px 22px;
+    text-align: center;
+  }
+  .stat-box strong { display: block; font-size: 1.8rem; color: white; }
+  .stat-box span { font-size: 0.75rem; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .step-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 5px solid var(--red);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: transform 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .step-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  
+  .step-num {
+    position: absolute; top: -10px; left: 16px;
+    background: var(--red); color: white;
+    border-radius: 50%; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .step-card h3 { font-size: 0.95rem; margin-top: 10px; margin-bottom: 6px; color: var(--dark); }
+  .step-card p { font-size: 0.8rem; color: #555; line-height: 1.5; }
+  .step-tip {
+    margin-top: 8px; font-size: 0.75rem;
+    background: #fff7ed; border-left: 3px solid var(--orange);
+    padding: 6px 10px; border-radius: 4px; color: #7c3b00;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .icon { font-size: 1.3rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th {
+    background: var(--dark);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  .pieces-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .pieces-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .pieces-header {
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pieces-header.vend { background: var(--green); }
+  .pieces-header.notvend { background: #6b7280; }
+  
+  .pieces-body { padding: 14px 18px; }
+  .famille-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 8px 0; border-bottom: 1px solid #f0f0f0;
+    font-size: 0.82rem;
+  }
+  .famille-row:last-child { border-bottom: none; }
+  .famille-name { font-weight: 600; color: var(--dark); flex: 0 0 38%; }
+  .famille-examples { color: #555; flex: 1; padding: 0 8px; }
+  .famille-note { color: var(--orange); font-size: 0.75rem; flex: 0 0 28%; text-align: right; }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  }
+  .badge.oui { background: #dcfce7; color: #166534; }
+  .badge.non { background: #fee2e2; color: #991b1b; }
+
+  .fournisseur-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .fournisseur-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-top: 4px solid var(--red);
+  }
+  .fournisseur-card h3 { font-size: 1rem; color: var(--red); margin-bottom: 12px; }
+  .fournisseur-item { margin-bottom: 8px; font-size: 0.8rem; }
+  .fournisseur-item .fam { font-weight: 700; color: var(--dark); margin-bottom: 2px; }
+  .fournisseur-item .marks { color: #555; }
+
+  .lexique-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .lex-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--blue);
+  }
+  .lex-card.synonyme-card {
+    border-left: 4px solid var(--purple);
+  }
+  .lex-term { font-weight: 700; font-size: 0.9rem; color: var(--blue); margin-bottom: 4px; }
+  .lex-card.synonyme-card .lex-term { color: var(--purple); }
+  .lex-def { font-size: 0.8rem; color: #444; margin-bottom: 4px; line-height: 1.4; }
+  .lex-example { font-size: 0.75rem; color: var(--orange); font-style: italic; }
+
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .link-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .link-card h3 { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+  .link-card a {
+    display: block; font-size: 0.78rem; color: var(--blue);
+    text-decoration: none; padding: 4px 0;
+    border-bottom: 1px solid #eee;
+    transition: color 0.2s;
+  }
+  .link-card a:last-child { border-bottom: none; }
+  .link-card a:hover { color: var(--red); }
+  .link-card a::before { content: '🔗 '; }
+
+  .category-title {
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .cat-freinage td { border-left: 4px solid #ef4444; }
+  .cat-suspension td { border-left: 4px solid #22c55e; }
+  .cat-embrayage td { border-left: 4px solid #f97316; }
+  .cat-direction td { border-left: 4px solid #3b82f6; }
+  .cat-habitacle td { border-left: 4px solid #8b5cf6; }
+
+  .search-bar {
+    position: relative; margin-bottom: 20px;
+  }
+  .search-bar input {
+    width: 100%; padding: 12px 16px 12px 44px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 0.9rem; outline: none; transition: border 0.2s;
+  }
+  .search-bar input:focus { border-color: var(--red); }
+  .search-bar::before {
+    content: '🔍';
+    position: absolute; left: 14px; top: 13px; font-size: 1rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.8rem;
+    color: #999;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  mark { background: #fef08a; border-radius: 2px; }
+
+  .calc-input-wrap input[type="number"]::-webkit-inner-spin-button,
+  .calc-input-wrap input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .calc-input-wrap input[type="number"] { -moz-appearance: textfield; }
+
+  .calc-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  }
+  .calc-header h1 { font-size: 1.5rem; color: var(--dark); font-weight: 700; margin-bottom: 4px; }
+  .calc-header p { font-size: 0.85rem; color: #64748b; }
+
+  .calc-tabs {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px;
+    background: #f1f5f9; padding: 6px; border-radius: 14px; margin-bottom: 24px;
+  }
+  .calc-tab {
+    padding: 12px; border: none; background: transparent; border-radius: 10px;
+    font-weight: 600; font-size: 0.85rem; color: #64748b; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .calc-tab:hover { background: rgba(0,0,0,0.05); color: #334155; }
+  .calc-tab.active.locale { background: white; color: var(--calc-locale); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .calc-tab.active.misterauto { background: white; color: var(--calc-misterauto); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .calc-tab.active.metro { background: white; color: var(--calc-metro); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .calc-tab.active.dhl { background: white; color: var(--calc-dhl); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .calc-layout { display: flex; gap: 32px; align-items: stretch; }
+  .calc-main { flex: 2; display: flex; flex-direction: column; }
+  .calc-side {
+    flex: 1; min-width: 300px;
+    background: var(--dark); border-radius: 20px; padding: 28px;
+    color: white; display: flex; flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: background 0.4s;
+    position: relative; overflow: hidden;
+  }
+
+  .calc-content { display: none; animation: fadeIn 0.3s ease; }
+  .calc-content.active { display: block; }
+
+  .calc-alert { padding: 14px 18px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; line-height: 1.4; }
+  .calc-alert i { margin-top: 2px; }
+  .calc-alert.locale { background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; }
+  .calc-alert.locale i { color: var(--calc-locale); }
+  .calc-alert.misterauto { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+  .calc-alert.misterauto i { color: var(--calc-misterauto); }
+  .calc-alert.metro { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
+  .calc-alert.metro i { color: var(--calc-metro); }
+  .calc-alert.dhl { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+  .calc-alert.dhl i { color: var(--calc-dhl); }
+
+  .calc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .calc-form-group { display: flex; flex-direction: column; gap: 8px; }
+  .calc-form-group label { font-weight: 600; font-size: 0.85rem; color: #334155; }
+  
+  .calc-input-wrap { position: relative; }
+  .calc-input-wrap i.icon-left { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+  .calc-input-wrap span.unit-right { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 700; }
+  .calc-input-wrap input {
+    width: 100%; padding: 14px 16px 14px 44px;
+    border: 1px solid #cbd5e1; border-radius: 12px;
+    font-size: 1.15rem; font-weight: 700; background: #f8fafc; color: var(--dark);
+    outline: none; transition: all 0.2s;
+  }
+  .calc-input-wrap input:focus { background: white; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+  .calc-input-wrap input.focus-locale:focus { border-color: var(--calc-locale); }
+  .calc-input-wrap input.focus-misterauto:focus { border-color: var(--calc-misterauto); }
+  .calc-input-wrap input.focus-metro:focus { border-color: var(--calc-metro); }
+  .calc-input-wrap input.focus-dhl:focus { border-color: var(--calc-dhl); }
+
+  .calc-radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .calc-radio-group input { display: none; }
+  
+  .calc-radio-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px 10px;
+    text-align: center; cursor: pointer; transition: 0.2s; background: white; height: 100%;
+  }
+  .calc-radio-label i { font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; }
+  .calc-radio-label .title { font-weight: 700; font-size: 0.9rem; color: #475569; margin-bottom: 4px; }
+  .calc-radio-label .desc { font-size: 0.7rem; color: #94a3b8; line-height: 1.3; }
+  .calc-radio-group input:checked + .calc-radio-label { border-color: var(--calc-dhl); background: #fef2f2; }
+  .calc-radio-group input:checked + .calc-radio-label i { color: var(--calc-dhl); }
+  .calc-radio-group input:checked + .calc-radio-label .title,
+  .calc-radio-group input:checked + .calc-radio-label .desc { color: #475569 !important; }
+
+  .calc-toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 12px;
+    background: #f8fafc; margin-bottom: 24px; transition: all 0.3s;
+  }
+  .toggle-switch { position: relative; width: 44px; height: 24px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+  .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+  .toggle-switch input:checked + .slider { background-color: var(--calc-locale); }
+  .toggle-switch input:checked + .slider:before { transform: translateX(20px); }
+
+  .calc-tags { border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: white; }
+  .calc-tags-title { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+  .calc-tags-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .calc-tag-btn { padding: 8px 14px; background: #f8fafc; color: #475569; font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+  .calc-tag-btn:hover { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+
+  .calc-reset-btn {
+    background: none; border: none; color: #94a3b8; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; padding: 16px 0 0 0; margin-top: auto; transition: 0.2s;
+  }
+  .calc-reset-btn:hover { color: #475569; }
+
+  .calc-side h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+  .calc-result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 0.95rem; color: #cbd5e1; font-weight: 500; }
+  .calc-result-row strong { color: white; font-size: 1.05rem; }
+  .calc-result-row.hidden { display: none; }
+  
+  .calc-price-block { margin-top: auto; padding: 24px; border-radius: 16px; background: rgba(255,255,255,0.1); transition: background 0.4s; position: relative; z-index: 10; }
+  .calc-price-block .subtitle { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px; letter-spacing: 0.5px; }
+  .calc-price-block .total { font-size: 3rem; font-weight: 800; color: white; line-height: 1; display: flex; align-items: baseline; gap: 8px; }
+  .calc-price-block .total span.currency { font-size: 1.5rem; opacity: 0.8; }
+  
+  .calc-copy-btn {
+    width: 100%; padding: 16px; margin-top: 16px; border: none; border-radius: 12px;
+    background: rgba(255,255,255,0.15); color: white; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px;
+    position: relative; z-index: 10;
+  }
+  .calc-copy-btn:hover { background: rgba(255,255,255,0.25); }
+  .calc-copy-btn.success { background: #10b981; color: white; }
+
+  .calc-error { display: none; font-size: 0.75rem; font-weight: 600; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
+  .calc-error.show { display: flex; gap: 6px; align-items: center; }
+  .calc-error.danger { color: #991b1b; background: #fef2f2; border-color: #fee2e2; }
+
+  .gallery-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+  }
+  .image-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: transform 0.2s;
+  }
+  .image-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+  }
+  .image-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .image-info {
+    padding: 16px;
+    text-align: center;
+  }
+  .image-title {
+    font-size: 1rem;
+    color: var(--dark);
+    font-weight: 600;
+  }
+
+  .catalogue-wrapper { display: flex; gap: 24px; align-items: flex-start; }
+  .catalogue-sidebar { width: 280px; flex-shrink: 0; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; }
+  .catalogue-sidebar ul { list-style: none; }
+  .catalogue-sidebar li { border-bottom: 1px solid #f0f0f0; }
+  .catalogue-sidebar li:last-child { border-bottom: none; }
+  .catalogue-sidebar button { width: 100%; text-align: left; padding: 16px 20px; background: transparent; border: none; border-left: 4px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: 0.2s; }
+  .catalogue-sidebar button:hover { background: #f8fafc; }
+  .catalogue-sidebar button.active { background: #fef2f2; border-left-color: var(--red); }
+  
+  .cat-brand-box { width: 56px; height: 42px; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.04); flex-shrink: 0; overflow: hidden; position: relative;}
+  .cat-brand-text { font-size: 0.85rem; color: #475569; line-height: 1.3; }
+  
+  .catalogue-main { flex: 1; min-width: 0; }
+  .catalogue-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .catalogue-header h2 { font-size: 1.4rem; margin-bottom: 4px; color: var(--dark); font-weight: 700; }
+  .catalogue-header p { font-size: 0.85rem; color: #64748b; }
+  
+  .catalogue-search { position: relative; width: 320px; max-width: 100%; }
+  .catalogue-search input { width: 100%; padding: 12px 14px 12px 42px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; outline: none; transition: 0.2s; background: white; }
+  .catalogue-search input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1); }
+  .catalogue-search i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1rem; }
+
+  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .product-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+  .product-img { height: 130px; background: #f8fafc; display: flex; align-items: center; justify-content: center; position: relative; border-bottom: 1px solid #f1f5f9; }
+  .product-brand-tag { position: absolute; top: 10px; left: 10px; background: white; padding: 3px 8px; font-size: 0.65rem; font-weight: 700; border-radius: 6px; border: 1px solid #e2e8f0; color: #475569; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .product-img i { font-size: 3.5rem; opacity: 0.8; }
+  .product-info { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .product-ref { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; font-family: monospace; }
+  .product-name { font-size: 0.9rem; font-weight: 600; color: #1e293b; line-height: 1.3; }
+
+  /* Couleurs Tailwind transposées */
+  .text-blue-600 { color: #2563eb; }
+  .text-indigo-600 { color: #4f46e5; }
+  .text-yellow-500 { color: #eab308; }
+  .text-red-600 { color: #dc2626; }
+  .text-pink-500 { color: #ec4899; }
+
+  @media (max-width: 850px) {
+    .app-container { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); position: sticky; top: 92px; z-index: 90; display: block; }
+    .sidebar-search { padding: 16px 20px 0 20px; }
+    #globalResults { left: 20px; right: 20px; }
+    .sidebar nav { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 10px 0; }
+    .sidebar nav button { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 14px 20px; }
+    .sidebar nav button.active { border-left-color: transparent; border-bottom-color: var(--red); }
+    main { padding: 24px 20px; }
+    .calc-layout { flex-direction: column; }
+    .calc-grid-2 { grid-template-columns: 1fr; gap: 16px; }
+    
+    /* Responsive Catalogue */
+    .catalogue-wrapper { flex-direction: column; }
+    .catalogue-sidebar { width: 100%; }
+    .catalogue-sidebar ul { display: flex; overflow-x: auto; scrollbar-width: none; }
+    .catalogue-sidebar ul::-webkit-scrollbar { display: none; }
+    .catalogue-sidebar li { border-bottom: none; border-right: 1px solid #f0f0f0; flex-shrink: 0;}
+    .catalogue-sidebar button { border-left: none; border-bottom: 3px solid transparent; width: auto; padding: 12px 16px; display: block; text-align: center; }
+    .catalogue-sidebar button.active { border-left-color: transparent; border-bottom-color: var(--red); }
+    .cat-brand-box { margin: 0 auto 8px auto; }
+    .catalogue-header { flex-direction: column; align-items: flex-start; }
+    .catalogue-search { width: 100%; }
+  }
+
+  @media (max-width: 700px) { 
+    .pieces-grid { grid-template-columns: 1fr; } 
+    header { padding: 16px 20px; justify-content: center; }
+    .sidebar { top: 92px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">
+    <img src="data:image/png;base64,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" alt="Logo Pièces Auto Concorde">
+    <div>
+      <div class="header-title">Mon Assistant PAC</div>
+      <div class="header-sub">Documentation Utilisateur – Guide de Vente</div>
+    </div>
+  </div>
+</header>
+
+<div class="app-container">
+
+  <aside class="sidebar">
+    
+    <div class="sidebar-search">
+      <div class="search-input-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="globalSearch" placeholder="Rechercher dans la doc…" oninput="globalSearch()" autocomplete="off">
+      </div>
+      <div id="globalResults"></div>
+    </div>
+
+    <nav>
+      <button class="active" onclick="showTab('accueil')"><i class="fa-solid fa-house"></i> Accueil</button>
+      <button onclick="showTab('processus')"><i class="fa-solid fa-list-check"></i> Processus de vente</button>
+      <button onclick="showTab('tarification')"><i class="fa-solid fa-calculator"></i> Assistant Tarification</button>
+      <button onclick="showTab('pieces')"><i class="fa-solid fa-wrench"></i> Pièces vendues</button>
+      <button onclick="showTab('familles')"><i class="fa-solid fa-folder-open"></i> Familles & Devis</button>
+      <button onclick="showTab('fournisseurs')"><i class="fa-solid fa-industry"></i> Fournisseurs</button>
+      <button onclick="showTab('galerie')"><i class="fa-solid fa-eye"></i> Galerie</button>
+      <button onclick="showTab('catalogue')"><i class="fa-solid fa-book-open"></i> Catalogue 2026</button>
+      <button onclick="showTab('lexique')"><i class="fa-solid fa-book"></i> Lexique & Synonymes</button>
+      <button onclick="showTab('liens')"><i class="fa-solid fa-link"></i> Liens utiles</button>
+      <!-- NOUVEAU BOUTON AJOUTÉ ICI -->
+      <button onclick="showTab('transformation')"><i class="fa-solid fa-chart-pie"></i> Taux de transformation</button>
+    </nav>
+  </aside>
+
+  <main>
+    
+    <!-- ===== ACCUEIL ===== -->
+    <div class="section active" id="accueil">
+      <div class="hero">
+        <h1>👋 Bienvenue sur Mon Assistant PAC</h1>
+        <p>Ce guide interactif vous accompagne dans la vente de pièces automobiles neuves. Retrouvez ici toutes les procédures, les familles de pièces, les fournisseurs référencés et le lexique métier.</p>
+        <div class="hero-stats">
+          <div class="stat-box"><strong>5</strong><span>Étapes de vente</span></div>
+          <div class="stat-box"><strong>13</strong><span>Familles vendues</span></div>
+          <div class="stat-box"><strong>4</strong><span>Fournisseurs</span></div>
+          <div class="stat-box"><strong>34</strong><span>Termes & Synonymes</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">⚡</span> Accès rapide</h2>
+        <div class="steps-grid" style="margin-bottom:0">
+          <div class="step-card" onclick="showTab('processus')" style="border-color:#ef4444">
+            <div style="font-size:2rem">📋</div>
+            <h3>Processus de vente</h3>
+            <p>Les 5 étapes clés pour trouver et vendre une pièce efficacement.</p>
+          </div>
+          <div class="step-card" onclick="showTab('tarification')" style="border-color:#4f46e5">
+            <div style="font-size:2rem">🧮</div>
+            <h3>Tarification Rapide</h3>
+            <p>Calculateur de prix de vente selon fournisseur (Locale, DHL, etc.)</p>
+          </div>
+          <div class="step-card" onclick="showTab('pieces')" style="border-color:#22c55e">
+            <div style="font-size:2rem">🔧</div>
+            <h3>Ce qu'on vend</h3>
+            <p>Liste des familles de pièces de maintenance et hors périmètre.</p>
+          </div>
+          <div class="step-card" onclick="showTab('catalogue')" style="border-color:#8b5cf6">
+            <div style="font-size:2rem">📦</div>
+            <h3>Catalogue 2026</h3>
+            <p>Découvrez notre sélection de batteries, essuie-glaces et additifs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROCESSUS ===== -->
+    <div class="section" id="processus">
+      <div class="card">
+        <h2><span class="icon">📋</span> Processus de recherche d'une pièce</h2>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h3>Identifier le véhicule</h3>
+            <p>Demander la plaque d'immatriculation. Confirmer la MARQUE et le MODÈLE avec le client.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h3>Trouver la référence OEM</h3>
+            <p>Ouvrir Partslink24 ou Partsouq. Naviguer dans le schéma éclaté ou utiliser la barre de recherche.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h3>Comparer / Vérifier</h3>
+            <p>Noter les informations venant du client. Vérifier bien les pièces avant de donner le prix.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <h3>Vérifier le stock</h3>
+            <p>Consulter le stock interne en priorité sur le site PAC Concorde.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">5</div>
+            <h3>Commander</h3>
+            <p>Passer commande auprès des fournisseurs référencés. Vérifier les délais.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TARIFICATION ===== -->
+    <div class="section" id="tarification">
+      
+      <div class="calc-header">
+        <img src="data:image/png;base64,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" alt="Assistant de Tarification" style="height: 60px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div>
+          <h1>Mon Assistant de Tarification</h1>
+          <p>Générez vos prix de vente instantanément selon l'approvisionnement.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden; background: transparent; box-shadow: none;">
+        
+        <!-- Onglets Fournisseurs -->
+        <div class="calc-tabs">
+          <button onclick="switchCalcMode('locale')" id="btn-locale" class="calc-tab active locale"><i class="fa-solid fa-store"></i> Locale</button>
+          <button onclick="switchCalcMode('misterauto')" id="btn-misterauto" class="calc-tab"><i class="fa-solid fa-car"></i> Mister Auto</button>
+          <button onclick="switchCalcMode('metro')" id="btn-metro" class="calc-tab"><i class="fa-solid fa-plane-arrival"></i> Inter Car</button>
+          <button onclick="switchCalcMode('dhl')" id="btn-dhl" class="calc-tab"><i class="fa-solid fa-bolt"></i> DASIR</button>
+        </div>
+
+        <div class="calc-layout">
+          <div class="calc-main card">
+            
+            <!-- Contenu DASIR (DHL) -->
+            <div id="calc-dhl" class="calc-content">
+              <div class="calc-alert dhl">
+                <i class="fa-solid fa-circle-info"></i>
+                <p><strong>DASIR :</strong> Calcul basé sur le barème expédition express. <strong>Max 30kg.</strong></p>
+              </div>
+
+              <div class="calc-grid-2">
+                <div class="calc-form-group">
+                  <label>Prix d'achat unitaire (HT)</label>
+                  <div class="calc-input-wrap">
+                    <i class="fa-solid fa-euro-sign icon-left"></i>
+                    <input type="number" id="prix-dhl" step="0.01" min="0" placeholder="0.00" class="focus-dhl" oninput="calculatePrice()">
+                  </div>
+                </div>
+                <div class="calc-form-group">
+                  <label>Poids de la pièce (KG)</label>
+                  <div class="calc-input-wrap">
+                    <i class="fa-solid fa-weight-hanging icon-left"></i>
+                    <input type="number" id="poids-dhl" step="0.1" min="0" max="30" placeholder="0.0" class="focus-dhl" oninput="calculatePrice()">
+                    <span class="unit-right">kg</span>
+                  </div>
+                  <div id="err-poids-dhl" class="calc-error danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Max 30 kg pour le barème DASIR.
+                  </div>
+                </div>
+              </div>
+
+              <div class="calc-form-group" style="margin-top: 8px;">
+                <label>Gabarit de la Pièce</label>
+                <div class="calc-radio-group">
+                  <div>
+                    <input type="radio" name="gabarit-dhl" id="gab-compacte" value="compacte" checked onchange="calculatePrice()">
+                    <label for="gab-compacte" class="calc-radio-label">
+                      <i class="fa-solid fa-box"></i>
+                      <div class="title">Compacte & Régulière</div>
+                      <div class="desc">Filtration, Embrayage, Freinage, Amortisseur</div>
+                    </label>
+                  </div>
+                  <div>
+                    <input type="radio" name="gabarit-dhl" id="gab-volumineuse" value="volumineuse" onchange="calculatePrice()">
+                    <label for="gab-volumineuse" class="calc-radio-label">
+                      <i class="fa-solid fa-boxes-packing"></i>
+                      <div class="title">Volumineuse</div>
+                      <div class="desc">Échappement, Radiateur, Optiques, Lève-vitre...</div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenu LOCALE -->
+            <div id="calc-locale" class="calc-content active">
+              <div class="calc-alert locale">
+                <i class="fa-solid fa-circle-info"></i>
+                <p><strong>COMMANDE LOCALE :</strong> Calcul basé sur le tarif d'achat sur l'île. Gestion simplifiée de la TVA.</p>
+              </div>
+
+              <div class="calc-form-group" style="max-width: 400px; margin-bottom: 20px;">
+                <label>Prix d'achat unitaire (HT)</label>
+                <div class="calc-input-wrap">
+                  <i class="fa-solid fa-euro-sign icon-left"></i>
+                  <input type="number" id="prix-locale" step="0.01" min="0" placeholder="0.00" class="focus-locale" oninput="calculatePrice()">
+                </div>
+                <div style="font-family: monospace; font-size: 0.8rem; background: #f1f5f9; padding: 6px 12px; border-radius: 6px; display: inline-block; margin-top: 12px; color: #64748b;" id="formule-texte-locale">
+                  Formule : HT × 1.085 × 2.25
+                </div>
+              </div>
+
+              <div class="calc-toggle-row" id="zone-tva">
+                <div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: #334155;">Appliquer la TVA (8.5%)</div>
+                  <div style="font-size: 0.75rem; color: #94a3b8;">Désactiver pour retirer le multiplicateur x1.085</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-tva" checked onchange="calculatePrice()">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="calc-tags">
+                <div class="calc-tags-title"><i class="fa-solid fa-tags"></i> Accès Rapide : Pièces sans TVA</div>
+                <div class="calc-tags-list">
+                  <button type="button" class="calc-tag-btn">Filtre</button>
+                  <button type="button" class="calc-tag-btn">Roulement</button>
+                  <button type="button" class="calc-tag-btn">Kit distri</button>
+                  <button type="button" class="calc-tag-btn">Injecteur</button>
+                  <button type="button" class="calc-tag-btn">Batterie</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenu MISTER AUTO -->
+            <div id="calc-misterauto" class="calc-content">
+              <div class="calc-alert misterauto">
+                <i class="fa-solid fa-circle-info"></i>
+                <p><strong>MISTER AUTO :</strong> Outil de chiffrage direct. Coefficient multiplicateur fixe de <strong>x1.3</strong> appliqué au prix TTC.</p>
+              </div>
+
+              <div class="calc-form-group" style="max-width: 400px;">
+                <label>Total TTC sur site Fournisseur</label>
+                <div class="calc-input-wrap">
+                  <i class="fa-solid fa-euro-sign icon-left"></i>
+                  <input type="number" id="prix-misterauto" step="0.01" min="0" placeholder="0.00" class="focus-misterauto" oninput="calculatePrice()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenu INTER CAR (Metro) -->
+            <div id="calc-metro" class="calc-content">
+              <div class="calc-alert metro">
+                <i class="fa-solid fa-circle-info"></i>
+                <p><strong>INTER CAR :</strong> Inclut les frais d'expédition standard (avion). <strong>Poids minimum facturé : 1kg.</strong></p>
+              </div>
+
+              <div class="calc-grid-2">
+                <div class="calc-form-group">
+                  <label>Prix d'achat unitaire</label>
+                  <div class="calc-input-wrap">
+                    <i class="fa-solid fa-euro-sign icon-left"></i>
+                    <input type="number" id="prix-metro" step="0.01" min="0" placeholder="0.00" class="focus-metro" oninput="calculatePrice()">
+                  </div>
+                </div>
+                <div class="calc-form-group">
+                  <label>Poids de la pièce (KG)</label>
+                  <div class="calc-input-wrap">
+                    <i class="fa-solid fa-weight-hanging icon-left"></i>
+                    <input type="number" id="poids-metro" step="0.1" min="0" placeholder="1.0" value="1" class="focus-metro" oninput="calculatePrice()">
+                    <span class="unit-right">kg</span>
+                  </div>
+                  <div id="err-poids-metro" class="calc-error">
+                    <i class="fa-solid fa-info-circle"></i> Le calcul s'arrondit à 1 KG minimum.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="resetCalcForms()" class="calc-reset-btn">
+              <i class="fa-solid fa-rotate-right"></i> Réinitialiser les données
+            </button>
+          </div>
+
+          <div class="calc-side bg-locale" id="calc-result-panel" style="background: var(--calc-locale);">
+            <h2><i class="fa-solid fa-receipt" style="opacity: 0.5;"></i> Bilan Tarification</h2>
+            
+            <div class="calc-result-row">
+              <span id="label-achat">Achat HT</span>
+              <strong id="res-achat">0.00 €</strong>
+            </div>
+            
+            <div class="calc-result-row">
+              <span id="label-variable">Frais de port</span>
+              <strong id="val-variable">0.00 €</strong>
+            </div>
+            
+            <div class="calc-result-row hidden" id="row-cout" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 8px;">
+              <span style="opacity: 0.7;">Coût de revient estimé</span>
+              <strong id="val-cout">0.00 €</strong>
+            </div>
+
+            <div class="calc-price-block locale" id="price-block">
+              <div class="subtitle">Prix Client (TTC)</div>
+              <div class="total">
+                <span id="res-total">0.00</span>
+                <span class="currency">€</span>
+              </div>
+            </div>
+
+            <button id="copyBtn" onclick="copyCalcPrice()" class="calc-copy-btn">
+              <i class="fa-solid fa-copy" id="copy-icon"></i> <span id="copy-text">Copier le prix de vente</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== PIECES ===== -->
+    <div class="section" id="pieces">
+      <div class="pieces-grid">
+        <div class="pieces-card">
+          <div class="pieces-header vend">✅ On vend – Pièces de maintenance</div>
+          <div class="pieces-body">
+            <div class="famille-row"><span class="famille-name">Filtres</span><span class="famille-examples">Huile, air, habitacle, carburant</span><span class="famille-note">Très demandés</span></div>
+            <div class="famille-row"><span class="famille-name">Huiles & liquides</span><span class="famille-examples">Huile moteur, liquide frein, refroidissement</span><span class="famille-note">Vérifier spec constructeur</span></div>
+            <div class="famille-row"><span class="famille-name">Freinage</span><span class="famille-examples">Plaquettes, disques, étriers, flexibles</span><span class="famille-note">Proposer par essieu</span></div>
+            <div class="famille-row"><span class="famille-name">Direction</span><span class="famille-examples">Crémaillère, rotule, biellette, colonne</span><span class="famille-note">Attention électrique/hydraulique</span></div>
+            <div class="famille-row"><span class="famille-name">Allumage</span><span class="famille-examples">Bougies, bobines, fils d'allumage</span><span class="famille-note">Essence=allumage / Diesel=préchauffage</span></div>
+            <div class="famille-row"><span class="famille-name">Distribution</span><span class="famille-examples">Courroie, kit, galet, kit chaîne</span><span class="famille-note">Vendre le kit complet</span></div>
+            <div class="famille-row"><span class="famille-name">Suspension</span><span class="famille-examples">Amortisseurs, ressorts, silent-blocs</span><span class="famille-note">—</span></div>
+            <div class="famille-row"><span class="famille-name">Refroidissement</span><span class="famille-examples">Thermostat, pompe à eau, radiateur</span><span class="famille-note">—</span></div>
+            <div class="famille-row"><span class="famille-name">Électrique</span><span class="famille-examples">Alternateur, démarreur, batterie, capteurs</span><span class="famille-note">—</span></div>
+            <div class="famille-row"><span class="famille-name">Joints & étanchéité</span><span class="famille-examples">Joints de culasse, de vilo, durites</span><span class="famille-note">—</span></div>
+            <div class="famille-row"><span class="famille-name">Éclairage</span><span class="famille-examples">Ampoules H4, H7, LED</span><span class="famille-note">Pas de phares complets</span></div>
+            <div class="famille-row"><span class="famille-name">Transmission</span><span class="famille-examples">Soufflets de cardan, roulements de roue</span><span class="famille-note">≠ boîte de vitesses</span></div>
+          </div>
+        </div>
+        <div class="pieces-card">
+          <div class="pieces-header notvend">❌ On ne vend pas – Hors périmètre</div>
+          <div class="pieces-body">
+            <div class="famille-row"><span class="famille-name">Carrosserie</span><span class="famille-examples">Pare-chocs, ailes, capots, portes, vitres</span><span class="famille-note">→ Carrossier / casse auto</span></div>
+            <div class="famille-row"><span class="famille-name">Électronique / multimédia</span><span class="famille-examples">Autoradio, GPS, caméra, calculateur</span><span class="famille-note">→ Électricien auto</span></div>
+            <div class="famille-row"><span class="famille-name">Boîte de vitesses</span><span class="famille-examples">BV manuelle, BV auto, convertisseur</span><span class="famille-note">Hors catalogue</span></div>
+            <div class="famille-row"><span class="famille-name">Moteur complet</span><span class="famille-examples">Bloc moteur, culasse complète</span><span class="famille-note">→ Motoriste spécialisé</span></div>
+            <div class="famille-row"><span class="famille-name">Sellerie / intérieur</span><span class="famille-examples">Sièges, moquette, tableau de bord</span><span class="famille-note">—</span></div>
+            <div class="famille-row"><span class="famille-name">Pneus</span><span class="famille-examples">Été, hiver, toutes saisons</span><span class="famille-note">→ Pneumaticien</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FAMILLES ===== -->
+    <div class="section" id="familles">
+      <div class="card">
+        <h2><span class="icon">📂</span> Catalogue Pièces – Quantités & Précisions</h2>
+        <table>
+          <tr>
+            <th>Pièce demandée</th>
+            <th>Quantité sur le devis</th>
+            <th>Précisions à demander</th>
+            <th>Catalogue</th>
+          </tr>
+          <tr class="category-title" style="background:#fee2e2"><td colspan="4">🔴 FREINAGE</td></tr>
+          <tr class="cat-freinage"><td>Plaquettes de frein</td><td>1 Jeu (4 plaquettes)</td><td>Avant ou Arrière ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Mâchoires de frein</td><td>1 Jeu (4 pièces)</td><td>Arrière uniquement</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Disques de frein</td><td>2 pièces (Paire obligatoire)</td><td>Avant ou Arrière ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Tambours de frein</td><td>2 pièces (Paire obligatoire)</td><td>Arrière uniquement</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Cylindre de roue</td><td>2 pièces (Recommandé)</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Étrier / Flexible / Capteur ABS</td><td>1 pièce (À l'unité)</td><td>Avant/Arrière ET Gauche/Droite ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Liquide de frein</td><td>1 Bidon</td><td>—</td><td><span class="badge non">✘ NON</span></td></tr>
+          <tr class="cat-freinage"><td>Maître-cylindre / Pompe à vide</td><td>1 pièce</td><td>Maître-cylindre : uniquement stock PAC</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Câble de frein à main</td><td>À l'unité ou par paire</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-freinage"><td>Témoin d'usure</td><td>À l'unité</td><td>Avant ou Arrière ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+
+          <tr class="category-title" style="background:#dcfce7"><td colspan="4">🟢 SUSPENSION</td></tr>
+          <tr class="cat-suspension"><td>Amortisseurs</td><td>2 pièces (Paire obligatoire)</td><td>Avant ou Arrière ? (même marque impératif)</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-suspension"><td>Coupelles / Butées / Soufflets / Kits</td><td>2 pièces (Paire obligatoire)</td><td>Avant ou Arrière ? (même marque impératif)</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-suspension"><td>Silentblocs de barre stabilisatrice</td><td>2 pièces (Paire obligatoire)</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-suspension"><td>Bras / Triangle de suspension</td><td>1 pièce (À l'unité)</td><td>Avant/Arrière ET Gauche/Droite ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-suspension"><td>Rotule de suspension / Moyeu / Roulement</td><td>1 pièce (À l'unité)</td><td>Avant/Arrière ET Gauche/Droite ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-suspension"><td>Rotule / Biellette / Barre stab.</td><td>1 pièce (À l'unité)</td><td>Gauche ou Droite ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+
+          <tr class="category-title" style="background:#ffedd5"><td colspan="4">🟠 EMBRAYAGE</td></tr>
+          <tr class="cat-embrayage"><td>Kit d'embrayage (Disque + Mécanisme + Butée)</td><td>1 Kit</td><td>Prioriser avec volant moteur si non précisé</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-embrayage"><td>Volant moteur</td><td>1 pièce</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-embrayage"><td>Émetteur / Récepteur / Câble d'embrayage</td><td>1 pièce</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+
+          <tr class="category-title" style="background:#dbeafe"><td colspan="4">🔵 DIRECTION</td></tr>
+          <tr class="cat-direction"><td>Crémaillère / Boîtier de direction</td><td>1 pièce</td><td>—</td><td><span class="badge oui">✔ OUI</span></td></tr>
+          <tr class="cat-direction"><td>Biellette / Rotule de direction</td><td>1 pièce</td><td>Prioriser les deux côtés si non précisé</td><td><span class="badge oui">✔ OUI</span></td></tr>
+
+          <tr class="category-title" style="background:#ede9fe"><td colspan="4">🟣 HABITACLE & CONFORT</td></tr>
+          <tr class="cat-habitacle"><td>Mécanisme de lève vitre</td><td>1 pièce</td><td>Avant ou Arrière ? ET Gauche ou Droit ?</td><td><span class="badge oui">✔ OUI</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== FOURNISSEURS ===== -->
+    <div class="section" id="fournisseurs">
+      <div class="card">
+        <h2><span class="icon">🏭</span> Marques par fournisseurs</h2>
+        <div class="fournisseur-grid">
+          <div class="fournisseur-card">
+            <h3>SACI</h3>
+            <div class="fournisseur-item"><div class="fam">Filtres</div><div class="marks">WIX FILTERS – PURFLUX – MECAFILTER</div></div>
+            <div class="fournisseur-item"><div class="fam">Disques de frein</div><div class="marks">TRW – FERODO – BLUE PRINT – DELPHI – VALEO – TEXTAR</div></div>
+            <div class="fournisseur-item"><div class="fam">Plaquettes de frein</div><div class="marks">FERODO – TRW – TEXTAR</div></div>
+            <div class="fournisseur-item"><div class="fam">Crémaillère</div><div class="marks">SNRA – SERA</div></div>
+            <div class="fournisseur-item"><div class="fam">Cardan</div><div class="marks">SNRA – CEVAM – EAI</div></div>
+            <div class="fournisseur-item"><div class="fam">Joints divers</div><div class="marks">CORTECO</div></div>
+            <div class="fournisseur-item"><div class="fam">Bougies</div><div class="marks">NGK – CHAMPION</div></div>
+            <div class="fournisseur-item"><div class="fam">Amortisseurs</div><div class="marks">MONROE – KYB – MEYLE</div></div>
+          </div>
+          <div class="fournisseur-card">
+            <h3>DATABOX</h3>
+            <div class="fournisseur-item"><div class="fam">Filtres</div><div class="marks">Référentiel équipementiers (pour refs croisées)</div></div>
+            <div class="fournisseur-item" style="color:#888;font-size:0.8rem;margin-top:12px;">Catalogue multi-références pour croiser les refs OEM et trouver des informations spécifiques sur les pièces.</div>
+          </div>
+          <div class="fournisseur-card">
+            <h3>EQUIP' AUTO</h3>
+            <div class="fournisseur-item"><div class="fam">Filtres</div><div class="marks">UFI – WIX FILTERS – JAPKO – VALEO</div></div>
+            <div class="fournisseur-item"><div class="fam">Disques de frein</div><div class="marks">JAPKO – TRW – SASIC – VALEO</div></div>
+            <div class="fournisseur-item"><div class="fam">Plaquettes</div><div class="marks">JAPKO – TRW</div></div>
+            <div class="fournisseur-item"><div class="fam">Crémaillère</div><div class="marks">SASIC</div></div>
+            <div class="fournisseur-item"><div class="fam">Cardan</div><div class="marks">RCA France</div></div>
+            <div class="fournisseur-item"><div class="fam">Joints divers</div><div class="marks">CORTECO – ELRING – PAYEN</div></div>
+            <div class="fournisseur-item"><div class="fam">Bougies</div><div class="marks">NGK – CHAMPION – BOSCH</div></div>
+            <div class="fournisseur-item"><div class="fam">Amortisseurs</div><div class="marks">JAPKO – TRW – KYB</div></div>
+          </div>
+          <div class="fournisseur-card">
+            <h3>PIÈCES EN STOCK</h3>
+            <div class="fournisseur-item"><div class="fam">Filtres</div><div class="marks">CORTECO – MECAFILTER</div></div>
+            <div class="fournisseur-item"><div class="fam">Disques de frein</div><div class="marks">DELPHI – BOSCH – VALEO</div></div>
+            <div class="fournisseur-item"><div class="fam">Plaquettes</div><div class="marks">DELPHI – BOSCH – VALEO</div></div>
+            <div class="fournisseur-item"><div class="fam">Crémaillère</div><div class="marks">CEVAM</div></div>
+            <div class="fournisseur-item"><div class="fam">Cardan</div><div class="marks">CEVAM</div></div>
+            <div class="fournisseur-item"><div class="fam">Joints divers</div><div class="marks">CORTECO</div></div>
+            <div class="fournisseur-item"><div class="fam">Bougies</div><div class="marks">NGK – CHAMPION</div></div>
+            <div class="fournisseur-item"><div class="fam">Amortisseurs</div><div class="marks">KYB – MONROE – TRW – KAVO PARTS</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GALERIE ===== -->
+    <div class="section" id="galerie">
+      <div class="card">
+        <h2><span class="icon">🖼️</span> Galerie d'Images</h2>
+        <div class="gallery-container">
+            
+            <!-- Carte Image 1 -->
+            <div class="image-card">
+                    <img src="C:/Users/annic/Downloads/FORMATION/Nouveau dossier/MODIF/Types de freinage.jpeg" alt="Types de freinage">
+                <div class="image-info">
+                    <h3 class="image-title">Types de freinage</h3>
+                </div>
+            </div>
+
+            <!-- Carte Image 2 -->
+	   <div class="image-card">
+		<img src="C:/Users/annic/Downloads/FORMATION/Nouveau dossier/MODIF/Disques.jpeg" alt="Disques de frein">
+                <div class="image-info">
+                    <h3 class="image-title">Disques de frein</h3>
+                 </div>
+            </div>
+
+            <!-- Carte Image 3 -->
+            <div class="image-card">
+		<img src="C:/Users/annic/Downloads/FORMATION/Nouveau dossier/MODIF/Capteur.jpeg" alt="Capteur">
+                <div class="image-info">
+                    <h3 class="image-title">Capteurs</h3>
+                </div>
+            </div>
+
+            <!-- Carte Image 4 -->
+            <div class="image-card">
+		<img src="C:/Users/annic/Downloads/FORMATION/Nouveau dossier/MODIF/Ampoule.jpeg" alt="Ampoule">
+                <div class="image-info">
+                    <h3 class="image-title">Ampoules</h3>
+                </div>
+            </div>
+
+            <!-- Carte Image 5 -->
+            <div class="image-card">
+		<img src="C:/Users/annic/Downloads/FORMATION/Nouveau dossier/MODIF/Suspension.jpeg" alt="Suspension">
+                <div class="image-info">
+                    <h3 class="image-title">Suspension</h3>
+                </div>
+            </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CATALOGUE 2026 ===== -->
+    <div class="section" id="catalogue" style="padding: 0; background: transparent;">
+      <div class="catalogue-wrapper">
+        
+        <!-- Sidebar Catalogue -->
+        <aside class="catalogue-sidebar">
+          <div style="padding: 16px 20px; background: #1a1a1a; color: white;">
+            <h1 style="font-size: 1.2rem; font-weight: 700; color: #ef4444; letter-spacing: 1px;">CONCORDE</h1>
+            <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">Pièces Auto - Cat. 2026</p>
+          </div>
+          <ul id="category-list">
+            <li>
+              <button onclick="setFilter('Toutes', 'Tous les produits')" id="btn-Toutes" class="active">
+                <div class="cat-brand-box" style="border:none; box-shadow:none;">
+                  <i class="fa-solid fa-layer-group" style="color: #64748b; font-size:1.2rem;"></i>
+                </div>
+                <span class="cat-brand-text" style="font-weight: 600;">Tout afficher</span>
+              </button>
+            </li>
+            <li>
+              <button onclick="setFilter('CRD', 'Gamme batterie')" id="btn-CRD">
+                <div class="cat-brand-box">
+                  <div style="text-align: center;">
+                    <div style="color: #dc2626; font-weight: 800; font-size: 1.1rem; line-height: 1;">CRD</div>
+                    <div style="font-size: 0.45rem; font-weight: 800; letter-spacing: 1px; margin-top: 2px;">AUTOMOTIVE</div>
+                  </div>
+                </div>
+                <span class="cat-brand-text">Gamme batterie</span>
+              </button>
+            </li>
+            <li>
+              <button onclick="setFilter('BOSCH', 'Essuie-glace')" id="btn-BOSCH">
+                <div class="cat-brand-box" style="gap: 4px;">
+                  <i class="fa-solid fa-power-off" style="color: #cbd5e1; font-size: 0.7rem; transform: rotate(90deg);"></i>
+                  <span style="color: #dc2626; font-weight: 900; font-size: 1.1rem; letter-spacing: -1px;">BOSCH</span>
+                </div>
+                <span class="cat-brand-text">Essuie-glace</span>
+              </button>
+            </li>
+            <li>
+              <button onclick="setFilter('MICHELIN', 'Gamme entretien et soin du véhicule')" id="btn-MICHELIN">
+                <div class="cat-brand-box" style="flex-direction: column;">
+                  <div style="display: flex; align-items: center;">
+                    <i class="fa-solid fa-truck-monster" style="font-size: 0.6rem; margin-right: 4px;"></i>
+                    <span style="color: #1d4ed8; font-weight: 900; font-style: italic; font-size: 0.95rem; letter-spacing: -0.5px;">MICHELIN</span>
+                  </div>
+                  <div style="height: 4px; width: 80%; background: #eab308; margin-top: 2px;"></div>
+                </div>
+                <span class="cat-brand-text">Gamme entretien et soin<br>du véhicule</span>
+              </button>
+            </li>
+            <li>
+              <button onclick="setFilter('FACOM', 'Gamme additif moteur et carburant')" id="btn-FACOM">
+                <div class="cat-brand-box" style="gap: 6px;">
+                  <div style="background: #dc2626; color: white; padding: 0 4px; font-size: 0.6rem; font-weight: 900; border-radius: 2px;">=</div>
+                  <span style="color: #111827; font-weight: 900; font-style: italic; font-size: 1rem; letter-spacing: -1px;">FACOM</span>
+                </div>
+                <span class="cat-brand-text">Gamme additif moteur et<br>carburant</span>
+              </button>
+            </li>
+            <li>
+              <button onclick="setFilter('YANKEE CANDLE', 'Gamme de parfum')" id="btn-YANKEE-CANDLE">
+                <div class="cat-brand-box">
+                  <span style="font-weight: 300; color: #64748b; font-size: 0.75rem; letter-spacing: 1px; text-align: center; line-height: 1.1;">
+                    YANKEE<br>CANDLE<sup style="font-size: 0.4rem;">®</sup>
+                  </span>
+                </div>
+                <span class="cat-brand-text">Gamme de parfum</span>
+              </button>
+            </li>
+          </ul>
+          <div style="padding: 16px 20px; border-top: 1px solid #f0f0f0; background: #f8fafc;">
+            <div style="font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-circle-info"></i> Prix TTC indicatifs
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Catalogue -->
+        <div class="catalogue-main">
+          <div class="catalogue-header">
+            <div>
+              <h2 id="current-category-title">Tous les produits</h2>
+              <p id="product-count">Affichage de tous les articles</p>
+            </div>
+            <div class="catalogue-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="cat-search-input" placeholder="Rechercher une pièce, réf..." oninput="filterCatalogue()">
+            </div>
+          </div>
+          
+          <div class="product-grid" id="product-grid">
+            <!-- Injecté par JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== LEXIQUE & SYNONYMES ===== -->
+    <div class="section" id="lexique">
+      <div class="card">
+        <h2><span class="icon">📖</span> Lexique & Synonymes</h2>
+        <p style="margin-bottom: 16px; font-size: 0.9rem; color: #555;">Retrouvez ici les termes courants ainsi que les différentes appellations (synonymes) utilisées par les clients et mécaniciens.</p>
+        <div class="search-bar">
+          <input type="text" id="lexSearch" placeholder="Rechercher un terme ou un synonyme…" oninput="filterLexique()">
+        </div>
+        <div class="lexique-grid" id="lexiqueGrid">
+          <!-- Termes généraux -->
+          <div class="lex-card"><div class="lex-term">OEM</div><div class="lex-def">Original Equipment Manufacturer – pièce d'origine constructeur, qualité identique à celle d'usine.</div><div class="lex-example">Ex : VW 1K0698151G</div></div>
+          <div class="lex-card"><div class="lex-term">Aftermarket / Adaptable</div><div class="lex-def">Pièce compatible fabriquée par un équipementier tiers.</div><div class="lex-example">Ex : Bosch, LuK, Febi, SKF, Sachs…</div></div>
+          <div class="lex-card"><div class="lex-term">VIN</div><div class="lex-def">Vehicle Identification Number – 17 caractères, unique par véhicule. Permet d'éviter les erreurs de compatibilité.</div><div class="lex-example">Ex : WVWZZZ1KZ4P040640</div></div>
+          <div class="lex-card"><div class="lex-term">Code moteur</div><div class="lex-def">Code court identifiant le moteur exact d'un véhicule.</div><div class="lex-example">Ex : BKC, BLS, N47D20C, M57D30…</div></div>
+          <div class="lex-card"><div class="lex-term">Réf constructeur</div><div class="lex-def">Référence officielle du fabricant du véhicule.</div><div class="lex-example">Ex VW : 1K0698151G</div></div>
+          <div class="lex-card"><div class="lex-term">Cross-reference</div><div class="lex-def">Correspondance entre une réf OEM et des réf aftermarket équivalentes. Utile pour trouver moins cher.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Kit distribution</div><div class="lex-def">Ensemble courroie + galets + pompe à eau vendus ensemble. Recommandé de changer le kit complet.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Essieu avant / arrière</div><div class="lex-def">Partie avant ou arrière du train roulant. Plaquettes et disques se commandent par essieu.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Spec huile</div><div class="lex-def">Norme constructeur pour l'huile moteur.</div><div class="lex-example">Ex : VW 504.00, BMW LL-04, ACEA C3</div></div>
+          <div class="lex-card"><div class="lex-term">MEC (Mise en Circulation)</div><div class="lex-def">Date de première immatriculation du véhicule. Important pour filtrer la bonne version de pièce.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Vue catalogue</div><div class="lex-def">Vue éclatée d'un ensemble mécanique avec toutes ses pièces numérotées. Disponible dans Partslink24.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Disponibilité</div><div class="lex-def">Présence de la pièce en stock (propre ou fournisseur). Toujours vérifier avant de confirmer au client.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Délai</div><div class="lex-def">Temps entre la commande fournisseur et la réception. À communiquer au client avant validation.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Équivalence</div><div class="lex-def">Pièce d'une autre marque compatible à 100% avec la pièce d'origine. Vérifiable sur DATABOX.</div><div class="lex-example">—</div></div>
+          <div class="lex-card"><div class="lex-term">Intersite</div><div class="lex-def">Pièce disponible dans un autre magasin PAC.</div><div class="lex-example">Ex : St André pour un client à St Pierre</div></div>
+          <div class="lex-card"><div class="lex-term">Kit révision / Kit vidange</div><div class="lex-def">Filtre air + filtre huile + filtre habitacle + filtre carburant + huile moteur.</div><div class="lex-example">—</div></div>
+          <div class="lex-card">
+            <div class="lex-term">Échange Standard (et la Consigne)</div>
+            <div class="lex-def">On vend une pièce reconditionnée à neuf (alternateur, démarreur, étrier de frein). Le client paie le prix de la pièce + une "consigne" (une caution). Quand il te ramène sa vieille pièce cassée (qu'on appelle la carcasse), tu lui rembourses la consigne.</div>
+            <div class="lex-example">Ex : Alternateur, démarreur en échange standard</div>
+          </div>
+          <div class="lex-card">
+            <div class="lex-term">Kit vs Jeu</div>
+            <div class="lex-def">Un <strong>Jeu</strong> regroupe des pièces identiques. Un <strong>Kit</strong> regroupe des pièces différentes mais qui travaillent ensemble. On conseille toujours de vendre le système complet.</div>
+            <div class="lex-example">Ex : Jeu de 4 plaquettes / Kit de distribution (courroie + galets + pompe)</div>
+          </div>
+          
+          <!-- Synonymes intégrés -->
+          <div class="lex-card synonyme-card"><div class="lex-term">Rotule de suspension</div><div class="lex-def">Rotule de triangle, rotule inférieure, pivot de suspension.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Biellette de barre stabilisatrice</div><div class="lex-def">Tirant de suspension, biellette de suspension, pendulaire.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Triangle de suspension</div><div class="lex-def">Bras de suspension, bras transversal, bras oscillant.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Coupelle d'amortisseur</div><div class="lex-def">Kit de butée de suspension, semelle d'amortisseur, butée tournante.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Silentbloc</div><div class="lex-def">Articulation élastique, palier, coussinet, bague en caoutchouc.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Calorstat</div><div class="lex-def">Thermostat d'eau, thermostat de liquide de refroidissement.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Débitmètre</div><div class="lex-def">Capteur de masse d'air, capteur MAF.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Vanne EGR</div><div class="lex-def">Soupape de recyclage des gaz d'échappement.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Boîtier papillon</div><div class="lex-def">Corps papillon, valve papillon, unité de commande de papillon.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Sonde Lambda</div><div class="lex-def">Capteur d'oxygène, sonde O2.</div><div class="lex-example">Plantée sur l'échappement.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Vase d'expansion</div><div class="lex-def">Bocal de liquide de refroidissement, réservoir de compensation.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Capteur PMH</div><div class="lex-def">Capteur Point Mort Haut, capteur de position de vilebrequin.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Cardan</div><div class="lex-def">Arbre de transmission, demi-arbre de roue.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Soufflet de cardan</div><div class="lex-def">Soufflet de transmission, kit de soufflet.</div><div class="lex-example">Toujours demander si c'est côté roue ou côté boîte de vitesses.</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Butée d'embrayage</div><div class="lex-def">Roulement de débrayage, butée hydraulique (ou CSC).</div></div>
+          <div class="lex-card synonyme-card"><div class="lex-term">Contacteur de frein</div><div class="lex-def">Capteur de pédale, contacteur de feux stop.</div><div class="lex-example">La petite pièce sous la pédale qui allume les feux arrière.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LIENS ===== -->
+    <div class="section" id="liens">
+  <div class="card">
+    <h2><span class="icon">🔗</span> Liens utiles</h2>
+
+    <div class="links-grid">
+      <div class="link-card">
+        <h3>🛢️ Recherche d'huiles moteur</h3>
+        <a href="https://www.liqui-moly.com/fr/huiles.html" target="_blank" rel="noopener noreferrer">Liqui Moly</a>
+        <a href="https://www.championlubes.com/fr-fr" target="_blank" rel="noopener noreferrer">Championlubes</a>
+      </div>
+
+      <div class="link-card">
+        <h3>📘 Catalogues d'origine (OEM)</h3>
+        <a href="https://www.partslink24.com" target="_blank" rel="noopener noreferrer">Partslink24</a>
+        <a href="https://partsouq.com/fr" target="_blank" rel="noopener noreferrer">Partsouq</a>
+      </div>
+
+      <div class="link-card">
+        <h3>🏬 Stock interne PAC</h3>
+        <a href="https://www.paconcorde.re/" target="_blank" rel="noopener noreferrer">Paconcorde.re</a>
+      </div>
+
+      <div class="link-card">
+        <h3>💳 Paiement en ligne</h3>
+        <a href="https://up2pay.voxpay.fr/payment/" target="_blank" rel="noopener noreferrer">Up2pay</a>
+      </div>
+
+      <div class="link-card">
+        <h3>🏭 Fournisseurs référencés</h3>
+        <a href="http://sacireunion.inoshop.net/" target="_blank" rel="noopener noreferrer">Saci</a>
+        <a href="https://connect.autodata.fr/databox.php#accueil/" target="_blank" rel="noopener noreferrer">Databox</a>
+        <a href="http://equipauto.inoshop.net/" target="_blank" rel="noopener noreferrer">Equip' Auto</a>
+        <a href="https://www.piecesenstock.re/" target="_blank" rel="noopener noreferrer">Pièces En Stock</a>
+        <a href="https://www.mister-auto.re/" target="_blank" rel="noopener noreferrer">Mister Auto Réunion</a>
+        <a href="https://pl.e-cat.intercars.eu/fr/" target="_blank" rel="noopener noreferrer">Intercars</a>
+        <a href="https://b2b.dasirweb.fr/login" target="_blank" rel="noopener noreferrer">Dasir</a>
+        <a href="https://public.servicebox.peugeot.com/?jbnRedirect=true" target="_blank" rel="noopener noreferrer">Servicebox</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- ===== TAUX DE TRANSFORMATION ===== -->
+    <div class="section" id="transformation">
+      <div class="card" style="display: flex; flex-direction: column; height: calc(100vh - 150px); padding: 24px 24px 0 24px; overflow: hidden;">
+        <h2><span class="icon">📈</span> Taux de transformation</h2>
+        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 16px;">
+          Suivez l'évolution de vos ventes et l'efficacité de vos devis.
+        </p>
+        <iframe src="C:\Users\annic\Downloads\FORMATION\Nouveau dossier\MODIF\Feuille 4.html" style="width: 100%; flex-grow: 1; border: none; border-radius: 12px 12px 0 0; background: #f8fafc;" title="Taux de transformation"></iframe>
+      </div>
+    </div>
+
+  </main>
+</div> <!-- Fin de .app-container -->
+
+<footer>
+  © 2026 Pièces Auto Concorde – Documentation interne Mon Assistant PAC – Tous droits réservés
+</footer>
+
+<script>
+// Logique de navigation principale
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar nav button').forEach(b => b.classList.remove('active'));
+  
+  const selectedSection = document.getElementById(id);
+  if (selectedSection) {
+    selectedSection.classList.add('active');
+  }
+
+  // Ajout de 'transformation' dans le tableau des index
+  const idx = ['accueil','processus','tarification','pieces','familles','fournisseurs','galerie','catalogue','lexique','liens', 'transformation'].indexOf(id);
+  if (idx !== -1) {
+    document.querySelectorAll('.sidebar nav button')[idx].classList.add('active');
+  }
+}
+
+function filterLexique() {
+  const q = document.getElementById('lexSearch').value.toLowerCase();
+  document.querySelectorAll('#lexiqueGrid .lex-card').forEach(card => {
+    card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ---- RECHERCHE GLOBALE ----
+const searchIndex = [
+  { tab: 'processus', title: 'Identifier le véhicule', text: 'plaque immatriculation marque modèle photo référence' },
+  { tab: 'processus', title: 'Trouver la référence OEM', text: 'Partslink24 Partsouq schéma éclaté Renault' },
+  { tab: 'tarification', title: 'Calculateur de prix de vente', text: 'DHL DASIR Locale Mister Auto Metro Inter car tarification prix marge' },
+  { tab: 'lexique', title: 'OEM', text: 'Original Equipment Manufacturer pièce origine constructeur qualité usine' },
+  { tab: 'lexique', title: 'Rotule de suspension', text: 'Rotule de triangle, rotule inférieure, pivot de suspension.' },
+  { tab: 'catalogue', title: 'Catalogue 2026', text: 'batterie essuie-glace entretien additif parfum CRD BOSCH MICHELIN FACOM YANKEE CANDLE' },
+  { tab: 'transformation', title: 'Taux de transformation', text: 'statistiques ventes devis conversion graphiques' }
+];
+
+const tabLabels = {
+  accueil: 'Accueil', processus: 'Processus', tarification: 'Tarification', pieces: 'Pièces',
+  familles: 'Familles & Devis', fournisseurs: 'Fournisseurs', galerie: 'Galerie', catalogue: 'Catalogue 2026', 
+  lexique: 'Lexique & Synonymes', liens: 'Liens utiles', transformation: 'Taux de transformation'
+};
+
+function globalSearch() {
+  const q = document.getElementById('globalSearch').value.trim().toLowerCase();
+  const box = document.getElementById('globalResults');
+  if (q.length < 2) { box.style.display = 'none'; return; }
+
+  const results = searchIndex.filter(item =>
+    item.title.toLowerCase().includes(q) || item.text.toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (results.length === 0) {
+    box.innerHTML = '<div class="result-empty">Aucun résultat pour « ' + q + ' »</div>';
+  } else {
+    box.innerHTML = results.map(r => `
+      <div class="result-item" onclick="goToResult('${r.tab}')">
+        <div class="result-tab">${tabLabels[r.tab]}</div>
+        <div class="result-title">${highlight(r.title, q)}</div>
+        <div class="result-snippet">${highlight(r.text.slice(0, 80), q)}…</div>
+      </div>
+    `).join('');
+  }
+  box.style.display = 'block';
+}
+
+function highlight(text, q) {
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function goToResult(tab) {
+  showTab(tab);
+  document.getElementById('globalSearch').value = '';
+  document.getElementById('globalResults').style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.sidebar-search')) {
+    document.getElementById('globalResults').style.display = 'none';
+  }
+});
+
+/* ==========================================================
+   LOGIQUE DE L'ASSISTANT DE TARIFICATION
+   ========================================================== */
+let calcMode = 'locale'; // dhl, metro, locale, misterauto
+
+const DHL_COMPACTE = [
+  { max: 1, prix: 37 }, { max: 5, prix: 44 }, { max: 10, prix: 75 },
+  { max: 15, prix: 109 }, { max: 20, prix: 147 }, { max: 25, prix: 181 }, { max: 30, prix: 219 }
+];
+const DHL_VOLUMINEUSE = [
+  { max: 5, prix: 73 }, { max: 10, prix: 188 }, { max: 15, prix: 219 },
+  { max: 20, prix: 249 }, { max: 25, prix: 297 }, { max: 30, prix: 341 }
+];
+const FRAIS_DOSSIER = 18.43;
+const TAUX_TAXE = 0.085;
+
+function switchCalcMode(mode) {
+  calcMode = mode;
+  document.querySelectorAll('.calc-content').forEach(el => el.classList.remove('active'));
+  document.getElementById(`calc-${mode}`).classList.add('active');
+  document.querySelectorAll('.calc-tab').forEach(btn => btn.className = "calc-tab");
+
+  const btn = document.getElementById(`btn-${mode}`);
+  const resultPanel = document.getElementById('calc-result-panel');
+  const priceBlock = document.getElementById('price-block');
+  const labelAchat = document.getElementById('label-achat');
+
+  btn.classList.add('active', mode);
+  
+  let bgColor = "";
+  if (mode === 'dhl') { bgColor = "var(--calc-dhl)"; priceBlock.className = "calc-price-block dhl"; labelAchat.innerText = "Achat HT"; } 
+  else if (mode === 'metro') { bgColor = "var(--calc-metro)"; priceBlock.className = "calc-price-block metro"; labelAchat.innerText = "Achat HT"; } 
+  else if (mode === 'locale') { bgColor = "var(--calc-locale)"; priceBlock.className = "calc-price-block locale"; labelAchat.innerText = "Achat HT"; } 
+  else if (mode === 'misterauto') { bgColor = "var(--calc-misterauto)"; priceBlock.className = "calc-price-block misterauto"; labelAchat.innerText = "Achat TTC"; }
+
+  resultPanel.style.background = bgColor;
+  calculatePrice();
+}
+
+function calculatePrice() {
+  let achat = 0;
+  let prixVente = 0;
+  let valVarText = "";
+  let labelVarText = "";
+  let showCout = false;
+  let coutValue = 0;
+
+  if (calcMode === 'dhl') {
+    achat = parseFloat(document.getElementById('prix-dhl').value) || 0;
+    let poids = parseFloat(document.getElementById('poids-dhl').value) || 0;
+    let typePiece = document.querySelector('input[name="gabarit-dhl"]:checked').value;
+    
+    const errPoids = document.getElementById('err-poids-dhl');
+    if (poids > 30) errPoids.classList.add('show'); else errPoids.classList.remove('show');
+
+    let fraisPort = 0;
+    if (poids > 0 && poids <= 30) {
+        const bareme = typePiece === 'compacte' ? DHL_COMPACTE : DHL_VOLUMINEUSE;
+        for (let i = 0; i < bareme.length; i++) {
+            if (poids <= bareme[i].max) { fraisPort = bareme[i].prix; break; }
+        }
+    }
+    
+    let taxe = (achat + fraisPort) * TAUX_TAXE;
+    let coutRevient = achat + fraisPort + taxe + FRAIS_DOSSIER;
+    prixVente = (achat === 0 && poids === 0) ? 0 : coutRevient * 1.085 * 1.5;
+    
+    labelVarText = "Frais de port";
+    valVarText = fraisPort.toFixed(2) + " € " + (poids > 0 && poids <= 30 ? `<span style="font-size:0.75rem;opacity:0.7;">(${poids}kg)</span>` : "");
+  } 
+  else if (calcMode === 'metro') {
+    achat = parseFloat(document.getElementById('prix-metro').value) || 0;
+    let valPoids = parseFloat(document.getElementById('poids-metro').value);
+    if (isNaN(valPoids)) valPoids = 1;
+
+    const errPoids = document.getElementById('err-poids-metro');
+    let effectivePoids = valPoids;
+    if (valPoids > 0 && valPoids < 1) {
+        effectivePoids = 1;
+        errPoids.classList.add('show');
+    } else {
+        errPoids.classList.remove('show');
+        effectivePoids = Math.max(1, valPoids);
+    }
+
+    coutValue = (achat * 1.065) + (effectivePoids * 6.5 * 0.065) + (effectivePoids * 11);
+    prixVente = (achat === 0) ? 0 : coutValue * 1.5 * 1.085;
+
+    labelVarText = "Frais Import Estimés";
+    valVarText = achat > 0 ? (coutValue - achat).toFixed(2) + " €" : "0.00 €";
+    showCout = true;
+  } 
+  else if (calcMode === 'locale') {
+    achat = parseFloat(document.getElementById('prix-locale').value) || 0;
+    let avecTVA = document.getElementById('toggle-tva').checked;
+    
+    const txtFormule = document.getElementById('formule-texte-locale');
+    if (avecTVA) {
+        txtFormule.innerText = "Formule : HT × 1.085 × 2.25";
+        labelVarText = "Application TVA (8.5%)";
+        valVarText = "<span style='color:#a7f3d0;'>Oui (x1.085)</span>";
+    } else {
+        txtFormule.innerText = "Formule : HT × 2.25 (Sans TVA)";
+        labelVarText = "Application TVA (8.5%)";
+        valVarText = "<span style='color:#fde68a;'>Non activée</span>";
+    }
+
+    let multiplicateur = avecTVA ? 1.085 : 1;
+    prixVente = (achat === 0) ? 0 : achat * multiplicateur * 2.25;
+  }
+  else if (calcMode === 'misterauto') {
+    achat = parseFloat(document.getElementById('prix-misterauto').value) || 0;
+    prixVente = (achat === 0) ? 0 : achat * 1.3;
+
+    labelVarText = "Coefficient appliqué";
+    valVarText = "<span style='color:#a7f3d0;font-weight:bold;'>x 1.3</span>";
+  }
+
+  document.getElementById('res-achat').innerText = achat.toFixed(2) + " €";
+  document.getElementById('label-variable').innerHTML = labelVarText;
+  document.getElementById('val-variable').innerHTML = valVarText;
+  
+  const rowCout = document.getElementById('row-cout');
+  if(showCout) {
+      rowCout.classList.remove('hidden');
+      document.getElementById('val-cout').innerText = (achat > 0 ? coutValue.toFixed(2) : "0.00") + " €";
+  } else {
+      rowCout.classList.add('hidden');
+  }
+
+  animateValue("res-total", parseFloat(document.getElementById('res-total').innerText.replace(',','.')) || 0, prixVente, 300);
+}
+
+function animateValue(id, start, end, duration) {
+  if (start === end) return;
+  let range = end - start;
+  let current = start;
+  let increment = end > start ? range / 15 : range / 15; 
+  let stepTime = Math.abs(Math.floor(duration / 15));
+  let obj = document.getElementById(id);
+  let timer = setInterval(function() {
+      current += increment;
+      if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+          clearInterval(timer);
+          obj.innerHTML = end.toFixed(2);
+      } else {
+          obj.innerHTML = current.toFixed(2);
+      }
+  }, stepTime);
+}
+
+document.querySelectorAll('.calc-tag-btn').forEach(tag => {
+  tag.addEventListener('click', () => {
+      const toggle = document.getElementById('toggle-tva');
+      const zone = document.getElementById('zone-tva');
+      toggle.checked = false;
+      calculatePrice();
+      zone.style.border = "2px solid var(--calc-locale)";
+      zone.style.background = "#eef2ff";
+      setTimeout(() => {
+          zone.style.border = "1px solid #e2e8f0";
+          zone.style.background = "#f8fafc";
+      }, 400);
+  });
+});
+
+function copyCalcPrice() {
+  const priceText = document.getElementById('res-total').innerText;
+  if (priceText === '0.00' || priceText === '0,00') return;
+
+  const textarea = document.createElement('textarea');
+  textarea.value = priceText.replace('.', ',');
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+      document.execCommand('copy');
+      const btn = document.getElementById('copyBtn');
+      const icon = document.getElementById('copy-icon');
+      const text = document.getElementById('copy-text');
+      
+      btn.classList.add('success');
+      icon.className = "fa-solid fa-check";
+      text.innerText = "Copié avec succès !";
+
+      setTimeout(() => {
+          btn.classList.remove('success');
+          icon.className = "fa-solid fa-copy";
+          text.innerText = "Copier le prix de vente";
+      }, 2000);
+
+  } catch (err) {
+      console.error('Erreur de copie', err);
+  }
+  document.body.removeChild(textarea);
+}
+
+function resetCalcForms() {
+  document.querySelectorAll('.calc-input-wrap input[type="number"]').forEach(input => input.value = "");
+  document.getElementById('poids-metro').value = "1";
+  document.getElementById('toggle-tva').checked = true;
+  document.getElementById('gab-compacte').checked = true;
+  document.getElementById('err-poids-dhl').classList.remove('show');
+  document.getElementById('err-poids-metro').classList.remove('show');
+  calculatePrice();
+}
+
+/* ==========================================================
+   LOGIQUE DU CATALOGUE 2026
+   ========================================================== */
+const catalogData = [
+  // Batteries (CRD)
+  { brand: "CRD", name: "Batterie 12V 50AH +D", ref: "CMF55017DIN50", category: "Batteries", icon: "fa-car-battery", color: "text-blue-600" },
+  { brand: "CRD", name: "Batterie 12V 72AH AGM +D Start", ref: "AGM72L3", category: "Batteries", icon: "fa-car-battery", color: "text-blue-600" },
+  { brand: "CRD", name: "Batterie 12V 95AH + D JAP", ref: "CRD125D31L", category: "Batteries", icon: "fa-car-battery", color: "text-blue-600" },
+  { brand: "CRD", name: "Batterie 12V 60AH +D", ref: "CMF56219DIN62", category: "Batteries", icon: "fa-car-battery", color: "text-blue-600" },
+  
+  // Essuie-glaces (BOSCH)
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 700 M", ref: "3397015584", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 650 M", ref: "3397015583", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 600 M", ref: "3397015582", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 550 M", ref: "3397015581", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 530 M", ref: "3397015580", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 500 M", ref: "3397015579", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 480 M", ref: "3397015578", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 450 M", ref: "3397015577", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 400 M", ref: "3397015576", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 380 M", ref: "3397015575", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+  { brand: "BOSCH", name: "Balai d'essuie-glace AEROECO 340 M", ref: "3397015574", category: "Essuie-Glace", icon: "fa-cloud-rain", color: "text-indigo-600" },
+
+  // Entretien (MICHELIN)
+  { brand: "MICHELIN", name: "Nettoyant freins 400ml", ref: "009465", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Brillant plastiques", ref: "009448", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Détachant tissus moquettes", ref: "009450", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Rénovateur parechocs", ref: "009453", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Nettoyant plastique parfum Menthe", ref: "009478", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Dépanne crevaison", ref: "009472", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Kit rénove optique", ref: "009475", category: "Entretien Auto", icon: "fa-spray-can", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Nettoyant Jantes et Enjoliveurs 500ml", ref: "009440", category: "Entretien Auto", icon: "fa-compact-disc", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Lustreur brillance extrême 500ml", ref: "009466", category: "Entretien Auto", icon: "fa-sparkles", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Compresseur digital 12V Programmable", ref: "009519", category: "Outillage & Accessoires", icon: "fa-gauge-high", color: "text-yellow-500" },
+  { brand: "MICHELIN", name: "Cric bouteille 3T", ref: "009559", category: "Outillage & Accessoires", icon: "fa-truck-ramp-box", color: "text-yellow-500" },
+  
+  // Additifs (FACOM)
+  { brand: "FACOM", name: "Nettoyant injecteur moteur diesel 300ml", ref: "006008", category: "Additifs Moteur", icon: "fa-flask", color: "text-red-600" },
+  { brand: "FACOM", name: "Nettoyant injecteur moteur essence 300ml", ref: "006007", category: "Additifs Moteur", icon: "fa-flask", color: "text-red-600" },
+  { brand: "FACOM", name: "Décalaminage moteur intégral diesel 1L", ref: "006025", category: "Additifs Moteur", icon: "fa-oil-can", color: "text-red-600" },
+  { brand: "FACOM", name: "Traitement moteur diesel HDI", ref: "006017", category: "Additifs Moteur", icon: "fa-snowflake", color: "text-red-600" },
+  { brand: "FACOM", name: "Nettoyant FAP", ref: "006022", category: "Additifs Moteur", icon: "fa-snowflake", color: "text-red-600" },
+  
+  // Parfum (YANKEE CANDLE)
+  { brand: "YANKEE CANDLE", name: "Black cherry", ref: "195000", category: "Divers & Parfums", icon: "fa-leaf", color: "text-pink-500" },
+  { brand: "YANKEE CANDLE", name: "Soft blanket", ref: "195001", category: "Divers & Parfums", icon: "fa-leaf", color: "text-pink-500" },
+  { brand: "YANKEE CANDLE", name: "Vanilla cupcake", ref: "195002", category: "Divers & Parfums", icon: "fa-leaf", color: "text-pink-500" },
+  { brand: "YANKEE CANDLE", name: "Midsummer's night", ref: "195004", category: "Divers & Parfums", icon: "fa-leaf", color: "text-pink-500" },
+  { brand: "YANKEE CANDLE", name: "Clean cotton", ref: "195005", category: "Divers & Parfums", icon: "fa-leaf", color: "text-pink-500" }
+];
+
+let currentCatCategory = "Toutes";
+
+function setFilter(brand, title) {
+  currentCatCategory = brand;
+  document.getElementById("cat-search-input").value = ""; 
+  
+  // Update des classes actives du sous-menu
+  document.querySelectorAll('#category-list button').forEach(btn => {
+      btn.classList.remove('active');
+  });
+  
+  const activeBtn = document.getElementById('btn-' + brand.replace(/\s+/g, '-'));
+  if (activeBtn) activeBtn.classList.add('active');
+  
+  document.getElementById("current-category-title").textContent = title;
+  
+  let filtered = catalogData;
+  if (brand !== "Toutes") {
+      filtered = catalogData.filter(p => p.brand === brand);
+  }
+  renderProducts(filtered);
+}
+
+function filterCatalogue() {
+  const searchTerm = document.getElementById('cat-search-input').value.toLowerCase();
+  const filtered = catalogData.filter(p => 
+      (currentCatCategory === "Toutes" || p.brand === currentCatCategory) &&
+      (p.name.toLowerCase().includes(searchTerm) || 
+       p.ref.toLowerCase().includes(searchTerm) || 
+       p.brand.toLowerCase().includes(searchTerm))
+  );
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById("product-grid");
+  const count = document.getElementById("product-count");
+  
+  grid.innerHTML = "";
+  count.textContent = `${products.length} article(s) trouvé(s)`;
+
+  if(products.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #94a3b8;">Aucun produit trouvé.</div>`;
+      return;
+  }
+
+  products.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "product-card";
+      
+      card.innerHTML = `
+          <div class="product-img">
+              <span class="product-brand-tag">${p.brand}</span>
+              <i class="fa-solid ${p.icon} ${p.color}"></i>
+          </div>
+          <div class="product-info">
+              <div class="product-ref">Réf: ${p.ref}</div>
+              <div class="product-name">${p.name}</div>
+          </div>
+      `;
+      grid.appendChild(card);
+  });
+}
+
+// Initialisation globale
+switchCalcMode('locale');
+setFilter('Toutes', 'Tous les produits');
+
+</script>
+</body>
+</html>
